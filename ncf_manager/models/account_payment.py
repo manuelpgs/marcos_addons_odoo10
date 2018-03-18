@@ -52,7 +52,7 @@ class AccountPayment(models.Model):
         if not invoices and active_ids:
             invoices = self.env[active_model].browse(active_ids)
 
-        retention_invoices = invoices.filtered(lambda r: r.purchase_type == "informal")
+        retention_invoices = invoices.filtered(lambda r: r.purchase_type in ("informal", "normal"))
 
         if retention_invoices:
             for inv in retention_invoices:
@@ -152,7 +152,7 @@ class account_register_payments(models.TransientModel):
 
         if active_ids:
             invoices = self.env[active_model].browse(active_ids)
-            retention_invoices = invoices.filtered(lambda r: r.purchase_type == "informal")
+            retention_invoices = invoices.filtered(lambda r: r.purchase_type in ("informal", "normal"))
 
         if retention_invoices:
             for inv in retention_invoices:

@@ -269,7 +269,7 @@ class AccountInvoice(models.Model):
         res = super(AccountInvoice, self).tax_line_move_line_get()
 
         if self.journal_id.type == "purchase" and self.journal_id.purchase_type in (
-                "informal") and not self._context.get("from_payment"):
+                "informal", "normal") and not self._context.get("from_payment"):
             res_without_retention = []
             tax_ids = [tax["tax_line_id"] for tax in res if tax["tax_line_id"]]
             tax_ids = self.env["account.tax"].browse(tax_ids)
