@@ -191,7 +191,7 @@ class DgiiReport(models.Model):
 
     company_id = fields.Many2one('res.company', 'Company', required=False,
                                  default=lambda self: self.env.user.company_id)
-    name = fields.Char(string=u"Periodo mes/año", required=True, unique=True, index=True)
+    name = fields.Char(string=u"Período MES/AÑO", required=True, unique=True, index=True)
     positive_balance = fields.Float(u"SALDO A FAVOR ANTERIOR", required=True)
 
     it_filename = fields.Char()
