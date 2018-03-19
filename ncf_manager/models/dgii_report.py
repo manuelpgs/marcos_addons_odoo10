@@ -531,8 +531,6 @@ class DgiiReport(models.Model):
 
         var_dump('*************** len(invoice_ids) 1: ', len(invoice_ids))
 
-        # FOR WHAT IS THIS REALLY, WHY WE NEED TAKE CARE OF THIS IN 607 REPORT?  
-        # PROBABLY THIS IS ONLY NECESSARY IN 606 REPORT.  #TODO OJO
         invoice_ids |= self.get_late_informal_payed_invoice(start_date, end_date) 
 
         var_dump('*************** len(invoice_ids) 2: ', len(invoice_ids))
