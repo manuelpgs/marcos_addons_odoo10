@@ -35,6 +35,7 @@
 ########################################################################################################################
 
 from odoo import models, fields, api, exceptions
+from var_dump import var_dump
 
 from openpyxl import load_workbook
 import base64
@@ -166,6 +167,9 @@ class DgiiReport(models.Model):
             rec.SALE_TOTAL_MONTO_CHARGED = rec.SALE_TOTAL_MONTO_FACTURADO - rec.SALE_TOTAL_MONTO_NC
 
             rec.count_final = summary_dict["final"]["count"]
+
+            var_dump('********** summary_dict["final"]["count"]: ', summary_dict["final"]["count"])
+            
             rec.count_fiscal = summary_dict["fiscal"]["count"]
             rec.count_gov = summary_dict["gov"]["count"]
             rec.count_special = summary_dict["special"]["count"]
@@ -307,7 +311,7 @@ class DgiiReport(models.Model):
             [('payment_date', '>=', start_date), ('payment_date', '<=', end_date), ('invoice_ids', '!=', False)])
 
         for paid_invoice_id in paid_invoice_ids:
-            invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal"))
+            invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase")
 
         return invoice_ids
 
@@ -382,7 +386,7 @@ class DgiiReport(models.Model):
         RETENCION_RENTA = 0
         # move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id), ('full_reconcile_id', '!=', False)])
         move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id)])
-        if invoice_id.journal_id.purchase_type in ("informal", "normal"):            
+        if invoice_id.journal_id.purchase_type in ("informal", "normal"):        
             if move_id:
                 retentions = self.env["account.move.line"].search(
                     [('invoice_id', '=', invoice_id.id), ('payment_id', '!=', False),
@@ -507,6 +511,10 @@ class DgiiReport(models.Model):
         journal_ids = self.env["account.journal"].search(
             ['|', ('ncf_control', '=', True), ('ncf_remote_validation', '=', True)])
 
+        var_dump('************** start_date: ', start_date)
+        var_dump('************** end_date: ', end_date)
+        var_dump('************** journal_ids.ids: ', journal_ids.ids)
+
         invoice_ids = self.env["account.invoice"].search(
             [('date_invoice', '>=', start_date), ('date_invoice', '<=', end_date),
              ('journal_id', 'in', journal_ids.ids)])
@@ -521,7 +529,13 @@ class DgiiReport(models.Model):
 
         invoice_ids = invoice_ids.filtered(lambda x: x.state in ('open', 'paid'))
 
-        invoice_ids |= self.get_late_informal_payed_invoice(start_date, end_date)
+        var_dump('*************** len(invoice_ids) 1: ', len(invoice_ids))
+
+        # FOR WHAT IS THIS REALLY, WHY WE NEED TAKE CARE OF THIS IN 607 REPORT?  
+        # PROBABLY THIS IS ONLY NECESSARY IN 606 REPORT.  #TODO OJO
+        invoice_ids |= self.get_late_informal_payed_invoice(start_date, end_date) 
+
+        var_dump('*************** len(invoice_ids) 2: ', len(invoice_ids))
 
         count = len(invoice_ids)
         for invoice_id in invoice_ids:
