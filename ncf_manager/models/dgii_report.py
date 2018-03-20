@@ -35,7 +35,6 @@
 ########################################################################################################################
 
 from odoo import models, fields, api, exceptions
-from var_dump import var_dump
 
 from openpyxl import load_workbook
 import base64
@@ -168,8 +167,6 @@ class DgiiReport(models.Model):
 
             rec.count_final = summary_dict["final"]["count"]
 
-            var_dump('********** summary_dict["final"]["count"]: ', summary_dict["final"]["count"])
-            
             rec.count_fiscal = summary_dict["fiscal"]["count"]
             rec.count_gov = summary_dict["gov"]["count"]
             rec.count_special = summary_dict["special"]["count"]
@@ -386,7 +383,7 @@ class DgiiReport(models.Model):
         RETENCION_RENTA = 0
         # move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id), ('full_reconcile_id', '!=', False)])
         move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id)])
-        if invoice_id.journal_id.purchase_type in ("informal", "normal"):        
+        if invoice_id.journal_id.purchase_type in ("informal", "normal"):
             if move_id:
                 retentions = self.env["account.move.line"].search(
                     [('invoice_id', '=', invoice_id.id), ('payment_id', '!=', False),
@@ -511,10 +508,6 @@ class DgiiReport(models.Model):
         journal_ids = self.env["account.journal"].search(
             ['|', ('ncf_control', '=', True), ('ncf_remote_validation', '=', True)])
 
-        var_dump('************** start_date: ', start_date)
-        var_dump('************** end_date: ', end_date)
-        var_dump('************** journal_ids.ids: ', journal_ids.ids)
-
         invoice_ids = self.env["account.invoice"].search(
             [('date_invoice', '>=', start_date), ('date_invoice', '<=', end_date),
              ('journal_id', 'in', journal_ids.ids)])
@@ -529,11 +522,7 @@ class DgiiReport(models.Model):
 
         invoice_ids = invoice_ids.filtered(lambda x: x.state in ('open', 'paid'))
 
-        var_dump('*************** len(invoice_ids) 1: ', len(invoice_ids))
-
-        invoice_ids |= self.get_late_informal_payed_invoice(start_date, end_date) 
-
-        var_dump('*************** len(invoice_ids) 2: ', len(invoice_ids))
+        invoice_ids |= self.get_late_informal_payed_invoice(start_date, end_date)
 
         count = len(invoice_ids)
         for invoice_id in invoice_ids:
@@ -633,7 +622,10 @@ class DgiiReport(models.Model):
                      ("id", 'not in', [x.id for x in untaxed_move_lines])])
             else:
                 taxed_lines_amount = self.env["account.move.line"].search([('move_id', '=', invoice_id.move_id.id),
-                                                                           ('product_id', 'in', taxed_lines_name)])
+                                                                           ('product_id', 'in', taxed_lines_name),
+                                                                           ('tax_line_id', '=', False), #TODO, improve this filtering; with it we are looking fixing a issue in 607 report with invoice line without product selected.
+                                                                           ('name', '!=', '/') #TODO, improve this filtering; with it we are looking fixing a issue in 607 report with invoice line without product selected.
+                                                                    ])
 
             commun_data["MONTO_FACTURADO"] = self.env.user.company_id.currency_id.round(
                 sum(abs(rec.debit - rec.credit) for rec in taxed_lines_amount))
