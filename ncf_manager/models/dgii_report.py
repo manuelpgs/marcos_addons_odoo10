@@ -35,6 +35,7 @@
 ########################################################################################################################
 
 from odoo import models, fields, api, exceptions
+from var_dump import var_dump
 
 from openpyxl import load_workbook
 import base64
@@ -301,6 +302,12 @@ class DgiiReport(models.Model):
                     (invoice_id.type, invoice_id.number, error_msg))
         return error_list
 
+
+    ''''
+        With this method they want get all invoices paid in a period of time
+        and use them in the report of the current month (start and end date given).
+        But, in theory this should be only valid for invoices with retention of ISR?
+    '''
     def get_late_informal_payed_invoice(self, start_date, end_date):
 
         invoice_ids = self.env["account.invoice"]
@@ -308,7 +315,7 @@ class DgiiReport(models.Model):
             [('payment_date', '>=', start_date), ('payment_date', '<=', end_date), ('invoice_ids', '!=', False)])
 
         for paid_invoice_id in paid_invoice_ids:
-            invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase")
+            invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase")             
 
         return invoice_ids
 
