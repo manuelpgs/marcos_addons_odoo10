@@ -310,7 +310,7 @@ class DgiiReport(models.Model):
         with retention of ITBIS and ISR and of kind "Informal", which means that
         don't matter if the NCF is issued by the provider or by the company requiring
         the services, what matter is the document/identification of the provider,
-        if this is of kind of "cedula", so it if informal.
+        if this is of kind of "cedula", so it is informal.
     '''
     def get_late_informal_payed_invoice(self, start_date, end_date):
 
@@ -396,8 +396,7 @@ class DgiiReport(models.Model):
         FECHA_PAGO = False
         ITBIS_RETENIDO = 0
         RETENCION_RENTA = 0
-        # move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id), ('full_reconcile_id', '!=', False)])
-        move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id)])
+        move_id = self.env["account.move.line"].search([("move_id", "=", invoice_id.move_id.id), ('full_reconcile_id', '!=', False)])
         if invoice_id.journal_id.purchase_type in ("informal", "normal"):
             if move_id:
                 retentions = self.env["account.move.line"].search(
@@ -770,7 +769,7 @@ class DgiiReport(models.Model):
 
         self.generate_txt_files()
         from pprint import pprint as pp
-        pp(xls_dict)
+        # pp(xls_dict)
         self.generate_xls_files(xls_dict)
 
         if error_list:
