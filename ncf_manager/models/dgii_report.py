@@ -36,6 +36,7 @@
 
 from odoo import models, fields, api, exceptions
 from var_dump import var_dump
+from pprint import pprint as pp
 
 from openpyxl import load_workbook
 import base64
@@ -321,9 +322,13 @@ class DgiiReport(models.Model):
 
         for paid_invoice_id in paid_invoice_ids:
             RNC_CEDULA, TIPO_IDENTIFICACION = self.get_identification_info(paid_invoice_id.partner_id.vat)
-
             if TIPO_IDENTIFICACION == "2": # just informal with or without ncf given.
-                invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase") # this is like array_push(), just making appends
+                account_move_lines = self.env["account.move.line"].search([('payment_id', '=', paid_invoice_id.id)])
+                if(account_move_lines):
+                    invoice = account_move_lines[0].invoice_id
+                    FECHA_PAGO, ITBIS_RETENIDO, RETENCION_RENTA = self.get_payment_date_and_retention_data(invoice)
+                    if ITBIS_RETENIDO or RETENCION_RENTA:
+                        invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase") # this is like array_push(), just making appends
 
         return invoice_ids
 
@@ -525,8 +530,6 @@ class DgiiReport(models.Model):
         invoice_ids = self.env["account.invoice"].search(
             [('date_invoice', '>=', start_date), ('date_invoice', '<=', end_date),
              ('journal_id', 'in', journal_ids.ids)])
-        #
-        # invoice_ids = self.env["account.invoice"].search([('number','=','A030180010100118113')])
 
         error_list = self.get_invoice_in_draft_error(invoice_ids.filtered(lambda x: x.state == "draft"))
 
@@ -768,7 +771,6 @@ class DgiiReport(models.Model):
             self.create_sales_lines(sale_report)
 
         self.generate_txt_files()
-        from pprint import pprint as pp
         # pp(xls_dict)
         self.generate_xls_files(xls_dict)
 
