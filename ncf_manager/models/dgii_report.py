@@ -306,16 +306,24 @@ class DgiiReport(models.Model):
     ''''
         With this method they want get all invoices paid in a period of time
         and use them in the report of the current month (start and end date given).
-        But, in theory this should be only valid for invoices with retention of ISR?
+        But, acording with some accountants, this should be only valid for invoices
+        with retention of ITBIS and ISR and of kind "Informal", which means that
+        don't matter if the NCF is issued by the provider or by the company requiring
+        the services, what matter is the document/identification of the provider,
+        if this is of kind of "cedula", so it if informal.
     '''
     def get_late_informal_payed_invoice(self, start_date, end_date):
 
-        invoice_ids = self.env["account.invoice"]
+        invoice_ids = self.env["account.invoice"] # this is like define an empty array|object
+
         paid_invoice_ids = self.env["account.payment"].search(
             [('payment_date', '>=', start_date), ('payment_date', '<=', end_date), ('invoice_ids', '!=', False)])
 
         for paid_invoice_id in paid_invoice_ids:
-            invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase")             
+            RNC_CEDULA, TIPO_IDENTIFICACION = self.get_identification_info(paid_invoice_id.partner_id.vat)
+
+            if TIPO_IDENTIFICACION == "2": # just informal with or without ncf given.
+                invoice_ids |= paid_invoice_id.invoice_ids.filtered(lambda r: r.journal_id.purchase_type in ("informal", "normal")).filtered(lambda r: r.journal_id.type == "purchase") # this is like array_push(), just making appends
 
         return invoice_ids
 
