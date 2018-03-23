@@ -35,8 +35,8 @@
 ########################################################################################################################
 
 from odoo import models, fields, api, exceptions
-from var_dump import var_dump
-from pprint import pprint as pp
+# from var_dump import var_dump
+# from pprint import pprint as pp
 
 from openpyxl import load_workbook
 import base64
@@ -566,8 +566,14 @@ class DgiiReport(models.Model):
                     invoice_id)
 
             FECHA_PAGO = ITBIS_RETENIDO = RETENCION_RENTA = False
+            
             if invoice_id.state == "paid":
                 FECHA_PAGO, ITBIS_RETENIDO, RETENCION_RENTA = self.get_payment_date_and_retention_data(invoice_id)
+                invoiceMonth = int(invoice_id.date_invoice[5:7])
+                paidMonth = int(FECHA_PAGO[5:7]) if FECHA_PAGO else False
+                periodMonth = int(month)
+                if invoiceMonth != paidMonth and invoiceMonth == periodMonth: # we this validation, we are looking don't show retentions in a period that the invoice was not paid.
+                    FECHA_PAGO = ITBIS_RETENIDO = RETENCION_RENTA = False
 
             commun_data = {
                 "RNC_CEDULA": RNC_CEDULA,
