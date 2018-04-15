@@ -415,6 +415,8 @@ class DgiiReport(models.Model):
                             RETENCION_RENTA += retention.credit
 
                     FECHA_PAGO = retentions[0].date
+                else:
+                    FECHA_PAGO = move_id and move_id[0].date or False                    
             else:
                 FECHA_PAGO = move_id and move_id[0].date or False
 
