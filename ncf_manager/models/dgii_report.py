@@ -103,8 +103,10 @@ class DgiiReport(models.Model):
                 summary_dict[purchase.invoice_id.purchase_fiscal_type]["count"] += 1
                 summary_dict[purchase.invoice_id.purchase_fiscal_type]["amount"] += purchase.MONTO_FACTURADO
 
-            rec.ITBIS_TOTAL_PAYMENT = rec.ITBIS_TOTAL - rec.ITBIS_TOTAL_NC
-            rec.TOTAL_MONTO_PAYMENT = rec.TOTAL_MONTO_FACTURADO - rec.TOTAL_MONTO_NC
+            # rec.ITBIS_TOTAL_PAYMENT = rec.ITBIS_TOTAL - rec.ITBIS_TOTAL_NC
+            # rec.TOTAL_MONTO_PAYMENT = rec.TOTAL_MONTO_FACTURADO - rec.TOTAL_MONTO_NC
+            rec.TOTAL_MONTO_PAYMENT = rec.TOTAL_MONTO_FACTURADO
+            rec.ITBIS_TOTAL_PAYMENT = rec.ITBIS_TOTAL
 
             rec.pcount_01 = summary_dict["01"]["count"]
             rec.pcount_02 = summary_dict["02"]["count"]
@@ -416,7 +418,7 @@ class DgiiReport(models.Model):
 
                     FECHA_PAGO = retentions[0].date
                 else:
-                    FECHA_PAGO = move_id and move_id[0].date or False                    
+                    FECHA_PAGO = move_id and move_id[0].date or False
             else:
                 FECHA_PAGO = move_id and move_id[0].date or False
 
@@ -568,7 +570,7 @@ class DgiiReport(models.Model):
                     invoice_id)
 
             FECHA_PAGO = ITBIS_RETENIDO = RETENCION_RENTA = False
-            
+
             if invoice_id.state == "paid":
                 FECHA_PAGO, ITBIS_RETENIDO, RETENCION_RENTA = self.get_payment_date_and_retention_data(invoice_id)
                 invoiceMonth = int(invoice_id.date_invoice[5:7])
@@ -875,7 +877,9 @@ class DgiiReport(models.Model):
             [rec.MONTO_FACTURADO for rec in self.purchase_report if rec.NUMERO_COMPROBANTE_MODIFICADO == False])
         TOTAL_MONTO_FACTURADO_NC = sum(
             [rec.MONTO_FACTURADO for rec in self.purchase_report if rec.NUMERO_COMPROBANTE_MODIFICADO != False])
-        TOTAL_MONTO_FACTURADO = "{:.2f}".format(TOTAL_MONTO_FACTURADO_FACTURAS - TOTAL_MONTO_FACTURADO_NC).zfill(16)
+        # TOTAL_MONTO_FACTURADO = "{:.2f}".format(TOTAL_MONTO_FACTURADO_FACTURAS - TOTAL_MONTO_FACTURADO_NC).zfill(16)
+        TOTAL_MONTO_FACTURADO = "{:.2f}".format(TOTAL_MONTO_FACTURADO_FACTURAS).zfill(16)
+        
         RETENCION_RENTA = "{:.2f}".format(sum([rec.RETENCION_RENTA for rec in self.purchase_report])).zfill(12)
 
         header = "606"
